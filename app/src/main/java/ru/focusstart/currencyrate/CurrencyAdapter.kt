@@ -10,15 +10,15 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 
 
-class CurrencyAdapter(context: Context, CurrencyList: ArrayList<CurrencyItem>) :
+class CurrencyAdapter(context: Context, currencyList: MutableList<CurrencyItem>) :
     RecyclerView.Adapter<CurrencyAdapter.CurrencyViewHolder>() {
-    private val Context: Context = context
-    private val CurrencyList: ArrayList<CurrencyItem> = CurrencyList
+    private val context: Context = context
+    private val currencyList: MutableList<CurrencyItem> = currencyList
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
     ): CurrencyViewHolder {
-        val v: View = LayoutInflater.from(Context).inflate(R.layout.currency_item, parent, false)
+        val v: View = LayoutInflater.from(context).inflate(R.layout.currency_item, parent, false)
         return CurrencyViewHolder(v)
     }
 
@@ -26,7 +26,7 @@ class CurrencyAdapter(context: Context, CurrencyList: ArrayList<CurrencyItem>) :
         holder: CurrencyViewHolder,
         position: Int
     ) {
-        val currentItem: CurrencyItem = CurrencyList[position]
+        val currentItem: CurrencyItem = currencyList[position]
         val currencyName: String? = currentItem.getCurrencyName()
         val currencyCode: String? = currentItem.getCurrencyCode()
         val currencyPrice: String? = currentItem.getCurrencyPrice()
@@ -37,7 +37,7 @@ class CurrencyAdapter(context: Context, CurrencyList: ArrayList<CurrencyItem>) :
     }
 
     override fun getItemCount(): Int {
-        return CurrencyList.size
+        return currencyList.size
     }
 
     inner class CurrencyViewHolder(itemView: View) : ViewHolder(itemView) {

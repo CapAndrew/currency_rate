@@ -1,8 +1,10 @@
 package ru.focusstart.currencyrate
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request
@@ -10,28 +12,67 @@ import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.currency_item.*
 import org.json.JSONException
 
 
+const val currencyURL = "https://www.cbr-xml-daily.ru/daily_json.js"
+
 class MainActivity : AppCompatActivity() {
-    private var recyclerView: RecyclerView? = null
-    private var currencyAdapter: CurrencyAdapter? = null
-    private var currencyList: ArrayList<CurrencyItem> = ArrayList()
+    lateinit var recyclerView: RecyclerView
+    lateinit var currencyAdapter: CurrencyAdapter
+    private var currencyList: MutableList<CurrencyItem> = ArrayList()
     private var requestQueue: RequestQueue? = null
+    private val db = DataBaseHelper(this)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         recyclerView = findViewById(R.id.recycler_view)
-        recyclerView?.setHasFixedSize(true)
-        recyclerView?.layoutManager = LinearLayoutManager(this)
+        recyclerView.setHasFixedSize(true)
+        recyclerView.layoutManager = LinearLayoutManager(this)
         requestQueue = Volley.newRequestQueue(this)
-        parseJSON()
+
+        if (readCurrencyListFromDB().isEmpty()) {
+            parseJSON()
+        } else {
+            fillCurrencyList(readCurrencyListFromDB())
+        }
+
+
+        currency_swipe_container.setProgressBackgroundColorSchemeColor(
+            ContextCompat.getColor(
+                this,
+                R.color.colorPrimary
+            )
+        )
+        currency_swipe_container.setColorSchemeColors(Color.WHITE)
+
+        currency_swipe_container.setOnRefreshListener {
+            db.deleteData()
+            currencyList.clear()
+            Log.i("Debug_Parsing", "Refresh currency list")
+            parseJSON()
+            currency_swipe_container.isRefreshing = false
+        }
+
+    }
+
+    private fun readCurrencyListFromDB(): MutableList<CurrencyItem> {
+        return db.readData()
+    }
+
+    private fun insertCurrencyListIntoDB(currencyList: MutableList<CurrencyItem>) {
+        for (currency in currencyList) {
+            db.insertData(currency)
+        }
     }
 
     private fun parseJSON() {
-        Log.i("Debug_Parsing", "Start download json from www.cbr-xml-daily.ru")
-        val url = "https://www.cbr-xml-daily.ru/daily_json.js"
+        Log.i("Debug_parsing", "Start download json from $currencyURL")
+        val url = currencyURL
         val request = JsonObjectRequest(Request.Method.GET, url, null,
             Response.Listener { response ->
                 try {
@@ -39,23 +80,22 @@ class MainActivity : AppCompatActivity() {
                     val valuteArray = valuteObject.names()
 
                     for (i in 0 until valuteArray.length()) {
-                        val jsonObject = valuteObject.getJSONObject(valuteArray.getString(i))
+                        val currencyObject = valuteObject.getJSONObject(valuteArray.getString(i))
 
-                        val currencyName = jsonObject.getString("Name")
-                        val currencyCode = jsonObject.getString("CharCode")
-                        val currencyPrice = jsonObject.getString("Value")
+                        val currencyName = currencyObject.getString("Name")
+                        val currencyCode = currencyObject.getString("CharCode")
+                        val currencyPrice = currencyObject.getString("Value")
 
                         currencyList.add(
                             CurrencyItem(
                                 currencyCode,
                                 currencyName,
-                                "$currencyPrice₽"
+                                currencyPrice
                             )
                         )
                     }
-
-                    currencyAdapter = CurrencyAdapter(this@MainActivity, currencyList)
-                    recyclerView!!.adapter = currencyAdapter
+                    insertCurrencyListIntoDB(currencyList)
+                    fillCurrencyList(currencyList)
                 } catch (e: JSONException) {
                     e.printStackTrace()
                 }
@@ -64,5 +104,26 @@ class MainActivity : AppCompatActivity() {
 
             })
         requestQueue?.add(request)
+    }
+
+    private fun fillCurrencyList(currencyList: MutableList<CurrencyItem>) {
+        val prettyPrintCurrencyList: MutableList<CurrencyItem> = ArrayList()
+        for (currency in currencyList) {
+            prettyPrintCurrencyList.add(
+                CurrencyItem(
+                    currency.getCurrencyCode(),
+                    currency.getCurrencyName(),
+                    currency.getCurrencyPrice() + "₽"
+                )
+            )
+        }
+
+        currencyAdapter = CurrencyAdapter(this@MainActivity, prettyPrintCurrencyList)
+        recyclerView.adapter = currencyAdapter
+    }
+
+    override fun onDestroy() {
+        db.close()
+        super.onDestroy()
     }
 }
