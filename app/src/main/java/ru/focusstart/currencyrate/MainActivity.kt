@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity() {
             fillCurrencyList(readCurrencyListFromDB())
         }
 
+
         currency_swipe_container.setProgressBackgroundColorSchemeColor(
             ContextCompat.getColor(
                 this,
@@ -52,17 +53,24 @@ class MainActivity : AppCompatActivity() {
         )
         currency_swipe_container.setColorSchemeColors(Color.WHITE)
         currency_swipe_container.setOnRefreshListener {
-            timer.cancel()
-            timer.purge()
-            autoUpdateCurrencyList(updateDelay)
-
-            db.deleteData()
-            currencyList.clear()
-            Log.i("Debug_parsing", "Refresh currency list")
-            parseJSON()
+            Log.i("Debug_parsing", "Refresh currency list by swipe")
+            restartTimer()
+            reloadCurrencyList()
             currency_swipe_container.isRefreshing = false
         }
 
+        autoUpdateCurrencyList(updateDelay)
+    }
+
+    private fun reloadCurrencyList(){
+        db.deleteData()
+        currencyList.clear()
+        parseJSON()
+    }
+
+    private fun restartTimer(){
+        timer.cancel()
+        timer.purge()
         autoUpdateCurrencyList(updateDelay)
     }
 
@@ -70,9 +78,7 @@ class MainActivity : AppCompatActivity() {
         timer = Timer()
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                db.deleteData()
-                currencyList.clear()
-                parseJSON()
+                reloadCurrencyList()
             }
         }, interval, interval)
     }
