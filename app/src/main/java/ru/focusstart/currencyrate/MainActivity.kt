@@ -13,18 +13,21 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.currency_item.*
 import org.json.JSONException
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 const val currencyURL = "https://www.cbr-xml-daily.ru/daily_json.js"
+const val updateDelay: Long = 30000
 
 class MainActivity : AppCompatActivity() {
-    lateinit var recyclerView: RecyclerView
-    lateinit var currencyAdapter: CurrencyAdapter
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var currencyAdapter: CurrencyAdapter
     private var currencyList: MutableList<CurrencyItem> = ArrayList()
     private var requestQueue: RequestQueue? = null
     private val db = DataBaseHelper(this)
+    private var timer = Timer()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +44,6 @@ class MainActivity : AppCompatActivity() {
             fillCurrencyList(readCurrencyListFromDB())
         }
 
-
         currency_swipe_container.setProgressBackgroundColorSchemeColor(
             ContextCompat.getColor(
                 this,
@@ -49,15 +51,30 @@ class MainActivity : AppCompatActivity() {
             )
         )
         currency_swipe_container.setColorSchemeColors(Color.WHITE)
-
         currency_swipe_container.setOnRefreshListener {
+            timer.cancel()
+            timer.purge()
+            autoUpdateCurrencyList(updateDelay)
+
             db.deleteData()
             currencyList.clear()
-            Log.i("Debug_Parsing", "Refresh currency list")
+            Log.i("Debug_parsing", "Refresh currency list")
             parseJSON()
             currency_swipe_container.isRefreshing = false
         }
 
+        autoUpdateCurrencyList(updateDelay)
+    }
+
+    private fun autoUpdateCurrencyList(interval: Long) {
+        timer = Timer()
+        timer.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                db.deleteData()
+                currencyList.clear()
+                parseJSON()
+            }
+        }, interval, interval)
     }
 
     private fun readCurrencyListFromDB(): MutableList<CurrencyItem> {
