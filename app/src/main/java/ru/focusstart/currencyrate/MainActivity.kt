@@ -150,19 +150,16 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         autoUpdateCurrencyList(updateDelay)
-        Log.i(TAG_Parsing, "Activity onResume")
     }
 
     override fun onPause() {
         super.onPause()
         stopTimer()
-        Log.i(TAG_Parsing, "Activity onPause")
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         db.close()
         stopTimer()
-        Log.i(TAG_Parsing, "Activity onDestroy")
     }
 }
