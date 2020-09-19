@@ -20,6 +20,7 @@ import kotlin.collections.ArrayList
 
 const val currencyURL = "https://www.cbr-xml-daily.ru/daily_json.js"
 const val updateDelay: Long = 30000
+const val TAG_Parsing = "Debug_parsing"
 
 class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
@@ -52,17 +53,26 @@ class MainActivity : AppCompatActivity() {
         )
         currency_swipe_container.setColorSchemeColors(Color.WHITE)
         currency_swipe_container.setOnRefreshListener {
-            timer.cancel()
-            timer.purge()
-            autoUpdateCurrencyList(updateDelay)
-
-            db.deleteData()
-            currencyList.clear()
-            Log.i("Debug_parsing", "Refresh currency list")
-            parseJSON()
+            Log.i(TAG_Parsing, "Refresh currency list by swipe")
+            restartTimer()
+            reloadCurrencyList()
             currency_swipe_container.isRefreshing = false
         }
+    }
 
+    private fun reloadCurrencyList(){
+        db.deleteData()
+        currencyList.clear()
+        parseJSON()
+    }
+
+    private fun stopTimer(){
+        timer.cancel()
+        timer.purge()
+    }
+
+    private fun restartTimer(){
+        stopTimer()
         autoUpdateCurrencyList(updateDelay)
     }
 
@@ -70,9 +80,7 @@ class MainActivity : AppCompatActivity() {
         timer = Timer()
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                db.deleteData()
-                currencyList.clear()
-                parseJSON()
+                reloadCurrencyList()
             }
         }, interval, interval)
     }
@@ -88,7 +96,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun parseJSON() {
-        Log.i("Debug_parsing", "Start download json from $currencyURL")
+        Log.i(TAG_Parsing, "Start download json from $currencyURL")
         val url = currencyURL
         val request = JsonObjectRequest(Request.Method.GET, url, null,
             Response.Listener { response ->
@@ -139,8 +147,22 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = currencyAdapter
     }
 
+    override fun onResume() {
+        super.onResume()
+        autoUpdateCurrencyList(updateDelay)
+        Log.i(TAG_Parsing, "Activity onResume")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopTimer()
+        Log.i(TAG_Parsing, "Activity onPause")
+    }
+    
     override fun onDestroy() {
-        db.close()
         super.onDestroy()
+        db.close()
+        stopTimer()
+        Log.i(TAG_Parsing, "Activity onDestroy")
     }
 }

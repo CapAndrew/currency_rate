@@ -11,7 +11,7 @@ const val TABLE = "Currency"
 const val CUR_CODE = "CharCode"
 const val CUR_NAME = "Name"
 const val CUR_PRICE = "Value"
-const val TAG = "DBHelper"
+const val TAG_DBHelper = "DBHelper"
 
 class DataBaseHelper(context: Context) : SQLiteOpenHelper(context, DBNAME, null, 1) {
     override fun onCreate(db: SQLiteDatabase?) {
@@ -20,12 +20,12 @@ class DataBaseHelper(context: Context) : SQLiteOpenHelper(context, DBNAME, null,
                 CUR_NAME + " VARCHAR(256), " +
                 CUR_PRICE + " VARCHAR(256))"
         db?.execSQL(createTable)
-        Log.i(TAG, "Create table $DBNAME")
+        Log.i(TAG_DBHelper, "Create table $DBNAME")
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
         db?.execSQL("DROP TABLE IF EXISTS $TABLE")
-        Log.i(TAG, "Drop table $DBNAME")
+        Log.i(TAG_DBHelper, "Drop table $DBNAME")
         onCreate(db)
     }
 
@@ -35,7 +35,7 @@ class DataBaseHelper(context: Context) : SQLiteOpenHelper(context, DBNAME, null,
         contentValues.put(CUR_CODE, currency.getCurrencyCode())
         contentValues.put(CUR_NAME, currency.getCurrencyName())
         contentValues.put(CUR_PRICE, currency.getCurrencyPrice())
-        Log.i(TAG, "Insert new data into $DBNAME")
+        Log.i(TAG_DBHelper, "Insert new data into $DBNAME")
         db.insert(TABLE, null, contentValues)
     }
 
@@ -67,7 +67,7 @@ class DataBaseHelper(context: Context) : SQLiteOpenHelper(context, DBNAME, null,
                 )
             } while (result.moveToNext())
         }
-        Log.i(TAG, "Read data from $DBNAME")
+        Log.i(TAG_DBHelper, "Read data from $DBNAME")
         return list
     }
 
@@ -75,6 +75,6 @@ class DataBaseHelper(context: Context) : SQLiteOpenHelper(context, DBNAME, null,
         val db = this.writableDatabase
         val selection = "delete from $TABLE"
         db.execSQL(selection)
-        Log.i(TAG, "Delete all from table $DBNAME")
+        Log.i(TAG_DBHelper, "Delete all from table $DBNAME")
     }
 }
