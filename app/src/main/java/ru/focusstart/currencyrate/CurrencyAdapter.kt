@@ -2,10 +2,14 @@ package ru.focusstart.currencyrate
 
 
 import android.content.Context
+import android.content.Intent
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 
@@ -34,6 +38,14 @@ class CurrencyAdapter(context: Context, currencyList: MutableList<CurrencyItem>)
         holder.currencyName.text = currencyName
         holder.currencyCode.text = currencyCode
         holder.currencyPrice.text = currencyPrice
+
+        holder.itemView.setOnClickListener {
+            Toast.makeText(context, "$currencyName", Toast.LENGTH_SHORT).show()
+            val intent = Intent(context, CurrencyExchange::class.java)
+            intent.putExtra("currencyPrice", currencyPrice)
+            intent.putExtra("currencyCode", currencyCode)
+            startActivity(context, intent, Bundle())
+        }
     }
 
     override fun getItemCount(): Int {
@@ -44,7 +56,5 @@ class CurrencyAdapter(context: Context, currencyList: MutableList<CurrencyItem>)
         var currencyName: TextView = itemView.findViewById(R.id.currency_name)
         var currencyCode: TextView = itemView.findViewById(R.id.currency_code)
         var currencyPrice: TextView = itemView.findViewById(R.id.currency_price)
-
     }
-
 }

@@ -14,6 +14,7 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
+import java.math.RoundingMode
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -60,18 +61,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun reloadCurrencyList(){
+    private fun reloadCurrencyList() {
         db.deleteData()
         currencyList.clear()
         parseJSON()
     }
 
-    private fun stopTimer(){
+    private fun stopTimer() {
         timer.cancel()
         timer.purge()
     }
 
-    private fun restartTimer(){
+    private fun restartTimer() {
         stopTimer()
         autoUpdateCurrencyList(updateDelay)
     }
@@ -138,7 +139,8 @@ class MainActivity : AppCompatActivity() {
                 CurrencyItem(
                     currency.getCurrencyCode(),
                     currency.getCurrencyName(),
-                    currency.getCurrencyPrice() + "₽"
+                    currency.getCurrencyPrice().toBigDecimal().setScale(2, RoundingMode.UP)
+                        .toString()
                 )
             )
         }

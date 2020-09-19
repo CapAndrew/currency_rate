@@ -1,3 +1,5 @@
 <resources>
-	<string name="app_name">Курсы валют</string>
+    <string name="app_name">Курсы валют</string>
+    <string name="calculate">Рассчитать</string>
+    <string name="amount_hint">Введите сумму для расчёта</string>
 </resources>
